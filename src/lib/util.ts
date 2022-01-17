@@ -35,13 +35,30 @@ const socketHandleDict: ThisFnObj<Socket, SocketDTO<BasicDTO>> = {
     const {
       data: { type, code, msg, data },
     } = payload;
-    if (type === "login") {
-      if (code) {
-        this.client.end();
-      } else {
-        this.parent.loginSuccess(data);
+    switch (type) {
+      case "login": {
+        if (code) {
+          this.client.end();
+        } else {
+          this.parent.loginSuccess(data);
+        }
+        window.showInformationMessage(`GemsRPG:${msg}`);
+        return;
       }
-      window.showInformationMessage(msg!);
+      case "getPlayers": {
+        this.parent.refreshOnlinePlayer(data);
+      }
+    }
+  },
+  single(payload) {
+    const {
+      data: { type, data },
+    } = payload;
+    switch (type) {
+      case "chat": {
+        this.parent.getMsgFromPlayer(data, payload.source);
+        return;
+      }
     }
   },
 };
@@ -50,7 +67,7 @@ export class Socket {
   client: net.Socket;
   user: LoginForm;
   parent: Game;
-  constructor(parent: Game, form: LoginForm, end: () => void) {
+  constructor(parent: Game, form: LoginForm, endCallback: () => void) {
     this.parent = parent;
     const client = net.connect({
       host: NET_CONNECT.host,
@@ -64,7 +81,11 @@ export class Socket {
     });
     client.on("close", () => {
       console.log("socket close");
-      end();
+      endCallback();
+    });
+    client.on("error", (error) => {
+      console.log(error);
+      window.showErrorMessage("GemsRPG:与线上服务的连接断开了");
     });
     this.user = form;
     this.send({ type: "login", data: form }, "sys", "");

@@ -1,9 +1,6 @@
-# Change Log
+# 更新日志
 
-All notable changes to the "gems-rpg-mud-game" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+## v0.0.1
+- 登录/注册/登出功能
+- 实时消息功能
+- 配置项里可直接配置`账号` `密码`与`是否开启自动登录`

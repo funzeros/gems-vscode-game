@@ -12,19 +12,21 @@ import {
   SideBarConfigCommand,
   PluginConfigKey,
 } from "./config";
+import { EntryList } from "./sidebar";
 import { Socket, Util } from "./util";
 
 const treeViewCommand: SideBarConfigCommand<Game> = {
   login() {
     if (this.socket) {
-      window.showWarningMessage(`[${this.socket.user.account}]已登录`);
+      window.showWarningMessage(`GemsRPG:[${this.socket.user.account}]已登录`);
       return;
     }
     window
       .showInputBox({
         title: "GemsRPG登录/注册",
         prompt: "格式：账号@密码，例：testaccount@123456",
-        placeHolder: "请输入账号与密码(以@分割，首尾空格无效)",
+        placeHolder:
+          "请输入账号与密码(账号不区分大小写，以@分割，首尾空格无效)",
         validateInput: (value) => {
           const list = value.trim().split("@");
           if (list.length < 2) return "缺少@分割符";
@@ -44,7 +46,7 @@ const treeViewCommand: SideBarConfigCommand<Game> = {
   },
   logout() {
     window
-      .showInformationMessage("确认退出登录？", "确认", "点错了")
+      .showInformationMessage("GemsRPG:确认退出登录？", "确认", "点错了")
       .then((res) => {
         if (res === "确认") {
           this.logout();
@@ -62,19 +64,22 @@ export class Game extends Util {
   ctx: ExtensionContext;
   socket?: Socket;
   statusBarItem?: StatusBarItem;
+  sideBar?: EntryList;
+  onlinePlayer: string[] = [];
   constructor(ctx: ExtensionContext) {
     super();
     this.ctx = ctx;
-    this.init();
   }
 
-  private init() {
+  public init() {
     const autoStart = this.readConfig("autoStart");
     const account = this.readConfig("account");
     const password = this.readConfig("password");
     if (autoStart && account && password) {
       this.login(new LoginForm(account, password));
     }
+    this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 0);
+    this.ctx.subscriptions.push(this.statusBarItem);
   }
   public treeViewClick(type: SideBarChildConfigKey) {
     treeViewCommand[type].call(this);
@@ -93,11 +98,14 @@ export class Game extends Util {
   }
   public login(form: LoginForm) {
     if (this.socket) {
-      window.showWarningMessage(`[${this.socket.user.account}]已登录`);
+      window.showWarningMessage(`GemsRPG:[${this.socket.user.account}]已登录`);
       return;
     }
     this.socket = new Socket(this, form, () => {
+      this.sideBar?.update();
       this.socket = void 0;
+      this.statusBarItem?.hide();
+      this.onlinePlayer = [];
     });
     this.writeConfig(form);
   }
@@ -105,18 +113,58 @@ export class Game extends Util {
     if (this.socket) {
       this.socket.end();
       this.socket = void 0;
-      window.showInformationMessage("退出登录成功");
+      window.showInformationMessage("GemsRPG:退出登录成功");
+      this.sideBar?.update();
       return;
     }
-    window.showWarningMessage("请先登录");
+    window.showWarningMessage("GemsRPG:请先登录");
   }
   public loginSuccess(payload: any) {
-    this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 0);
-    this.ctx.subscriptions.push(this.statusBarItem);
-    this.setStatusBarText(`$(flame)Gems RPG:[${payload.account}]`).show();
+    this.setStatusBarText(
+      `$(flame)GemsRPG:[${payload.account}](已登录)`
+    ).show();
+    this.sideBar?.update();
   }
   private setStatusBarText(text: string) {
     this.statusBarItem!.text = text;
     return this.statusBarItem!;
+  }
+  public get hasLogin() {
+    return !!this.socket;
+  }
+  public installSideBar(sideBar: EntryList) {
+    this.sideBar = sideBar;
+  }
+  public refreshOnlinePlayer(data: string[]) {
+    this.onlinePlayer = data;
+    this.sideBar?.update();
+  }
+  public sendMsgToPlayer(account: string) {
+    window
+      .showInputBox({
+        title: `正在给玩家[${account}]发送消息`,
+        prompt: "请不要发表非法言论，网络不是法外之地",
+        placeHolder: "我想说...",
+        validateInput: (value) => {
+          if (!value.trim()) return "内容不能为空";
+        },
+      })
+      .then((value) => {
+        if (!value) return;
+        this.socket?.send(
+          { type: "chat", data: value, code: 0 },
+          "single",
+          account
+        );
+      });
+  }
+  public getMsgFromPlayer(msg: string, fromAccount: string) {
+    window
+      .showInformationMessage(`[${fromAccount}对你说]:${msg}`, "回复", "无视")
+      .then((res) => {
+        if (res === "回复") {
+          this.sendMsgToPlayer(fromAccount);
+        }
+      });
   }
 }

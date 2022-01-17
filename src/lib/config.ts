@@ -4,6 +4,7 @@ export const enum GameConfig {}
 export const SIDE_BAR_CONFIG = {
   sys: "系统",
   game: "游戏内",
+  player: "玩家",
 };
 export const SIDE_BAR_CHILD_CONFIG = {
   login: "登录",
@@ -46,6 +47,7 @@ export class PluginConfig extends LoginForm {
 }
 export type PluginConfigKey = keyof PluginConfig;
 export const NET_CONNECT = {
-  host: "192.168.10.100",
+  // host: "localhost",
+  host: "1.15.114.61",
   port: 9900,
 };
