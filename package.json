@@ -2,7 +2,7 @@
   "name": "gems-rpg-mud-game",
   "displayName": "Gems的RPG文字游戏",
   "description": "一个简单的文字游戏",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "GemsFang",
   "icon": "public/logo.png",
   "engines": {
@@ -67,7 +67,8 @@
     "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "build": "vsce package"
+    "build": "vsce package",
+    "serve": "nodemon ./server/gems-rpg-serve.js"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",

@@ -25,8 +25,7 @@ const treeViewCommand: SideBarConfigCommand<Game> = {
       .showInputBox({
         title: "GemsRPG登录/注册",
         prompt: "格式：账号@密码，例：testaccount@123456",
-        placeHolder:
-          "请输入账号与密码(账号不区分大小写，以@分割，首尾空格无效)",
+        placeHolder: "请输入账号与密码(以@分割，首尾空格无效)",
         validateInput: (value) => {
           const list = value.trim().split("@");
           if (list.length < 2) return "缺少@分割符";

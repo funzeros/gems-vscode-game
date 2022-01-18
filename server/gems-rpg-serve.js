@@ -26,9 +26,12 @@
   function getFilePath(...paths) {
     return path.join(__dirname, ...paths);
   }
-
-  if (!fs.existsSync(getFilePath("log.txt"))) {
-    fs.writeFileSync(getFilePath("log.txt"), "", "utf8");
+  function getDay() {
+    const date = new Date();
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  }
+  if (!fs.existsSync(getFilePath("log"))) {
+    fs.mkdirSync(getFilePath("log"));
   }
   if (!fs.existsSync(getFilePath("db"))) {
     fs.mkdirSync(getFilePath("db"));
@@ -46,10 +49,14 @@
   }
 
   function printLog(message) {
+    const path = getFilePath("log", `${getDay()}.txt`);
+    if (!fs.existsSync(path)) {
+      fs.writeFileSync(path, "", "utf8");
+    }
     const time = new Date().toLocaleString();
     const msg = `${time}  ${message}`;
     console.log(msg);
-    fs.appendFile(getFilePath("log.txt"), msg + "\r\n", "utf8", () => void 0);
+    fs.appendFile(path, msg + "\r\n", "utf8", () => void 0);
   }
 
   const clients = new Map();
@@ -149,11 +156,14 @@
           clients.delete(account);
           printLog(`用户 ${account} 断开连接，当前在线${clients.size}人`);
         }
+        connection.end();
+        onData.sys.call(connection, { type: "getPlayers" });
       });
 
       connection.on("error", (err) => {
         printLog(`用户 ${connection.account} 强制断开连接`);
         printLog(err);
+        connection.end();
       });
     })
     .listen(PORT, () => printLog(`服务运行至 http://${ip}:${PORT}`));

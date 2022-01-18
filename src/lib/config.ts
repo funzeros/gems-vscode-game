@@ -47,7 +47,7 @@ export class PluginConfig extends LoginForm {
 }
 export type PluginConfigKey = keyof PluginConfig;
 export const NET_CONNECT = {
-  // host: "localhost",
-  host: "1.15.114.61",
+  host: "localhost",
+  // host: "1.15.114.61",
   port: 9900,
 };
