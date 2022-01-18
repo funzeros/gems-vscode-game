@@ -3,5 +3,5 @@ dist
 node_modules
 .vscode-test/
 *.vsix
-server/*.txt
 server/db
+server/log
