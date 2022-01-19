@@ -75,9 +75,14 @@ export class Socket {
     });
     this.client = client;
     client.on("data", (data) => {
-      const payload: SocketDTO<BasicDTO> = JSON.parse(data.toString());
-      const fn = socketHandleDict[payload.type];
-      fn && fn.call(this, payload);
+      try {
+        const payload: SocketDTO<BasicDTO> = JSON.parse(data.toString());
+        const fn = socketHandleDict[payload.type];
+        fn && fn.call(this, payload);
+      } catch (error) {
+        window.showErrorMessage("消息出错啦，请重新登录");
+        this.client.end();
+      }
     });
     client.on("close", () => {
       console.log("socket close");

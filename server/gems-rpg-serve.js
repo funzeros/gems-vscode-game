@@ -61,7 +61,9 @@
   try {
     const clients = new Map();
     function singleSend(connection, payload) {
+      const content = JSON.stringify(payload);
       connection.write(JSON.stringify(payload));
+      printLog(`singleSend:${content}`);
     }
     function singlecast(payload) {
       if (clients.has(payload.target)) {
@@ -142,16 +144,20 @@
     };
     net
       .createServer((connection) => {
-        printLog("创建连接了");
+        printLog("------创建连接了");
         connection.on("data", (dto) => {
-          printLog(dto);
-          const payload = JSON.parse(dto.toString());
-          const { type, data, target, source } = payload;
-          const fn = onData[type];
-          fn && fn.call(connection, data, target, source, payload);
+          try {
+            printLog(dto);
+            const payload = JSON.parse(dto.toString());
+            const { type, data, target, source } = payload;
+            const fn = onData[type];
+            fn && fn.call(connection, data, target, source, payload);
+          } catch (error) {
+            printLog(`ondata:error:${dto.toString()}`);
+          }
         });
         connection.on("close", () => {
-          printLog("close 断开连接了");
+          printLog("-------断开连接了");
           const { account } = connection;
           if (clients.has(account)) {
             writeUser(account, clients.get(account).data);
@@ -164,7 +170,7 @@
 
         connection.on("error", (err) => {
           printLog(`用户 ${connection.account} 强制断开连接`);
-          printLog(err);
+          printLog(`错误信息：${err}`);
           connection.end();
         });
       })
